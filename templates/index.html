@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section" id="resolver-section">
+    <div class="hero-badge">Academic Version 1.0</div>
+    <h1>Smart Git Merge Conflict Resolver</h1>
+    <p class="hero-subtitle">
+        Visually inspect, compare, and resolve Git merge conflict markers (<code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>, <code>=======</code>, <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>) side-by-side with real-time preview and export.
+    </p>
+</section>
+
+<!-- Input & Upload Section -->
+<section class="card input-card">
+    <div class="card-header">
+        <div class="card-title-group">
+            <span class="step-circle">1</span>
+            <div>
+                <h2>Input Conflicted Source Code</h2>
+                <p class="card-desc">Paste code directly or upload any conflicted source file (.py, .js, .txt, .html, etc.)</p>
+            </div>
+        </div>
+        <div class="sample-actions">
+            <span class="sample-label">1-Click Test Samples:</span>
+            <button type="button" id="btn-sample-simple" class="btn btn-secondary btn-sm" title="Load sample with 1 conflict">
+                <span>📄</span> Greeting (1 Conflict)
+            </button>
+            <button type="button" id="btn-sample-calculator" class="btn btn-secondary btn-sm" title="Load sample with 2 conflicts">
+                <span>🐍</span> Calculator Code (2 Conflicts)
+            </button>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- Drag & Drop Zone -->
+        <div class="upload-dropzone" id="dropzone">
+            <input type="file" id="file-input" class="file-input-hidden">
+            <label for="file-input" class="file-input-label">
+                <span class="upload-icon">📂</span>
+                <span class="upload-prompt"><strong>Click to upload</strong> or drag & drop conflicted file here</span>
+                <span class="file-types-hint">Supported: .py, .js, .txt, .json, .html, .css, .md, .java, .cpp</span>
+            </label>
+            <div id="file-name-display" class="file-name-display hidden"></div>
+        </div>
+
+        <!-- Textarea with Line Counter -->
+        <div class="editor-container">
+            <div class="editor-header">
+                <span class="editor-label">Conflicted Source Text</span>
+                <span class="editor-stats" id="input-stats">0 lines | 0 characters</span>
+            </div>
+            <textarea id="conflict-input" placeholder="Paste conflicted code here...
+Example:
+<<<<<<< HEAD
+print('Current Branch Implementation')
+=======
+print('Incoming Branch Implementation')
+>>>>>>> feature-branch" rows="11" spellcheck="false"></textarea>
+        </div>
+
+        <div class="input-actions-bar">
+            <div class="primary-actions">
+                <button type="button" id="btn-parse" class="btn btn-primary">
+                    <span>⚡</span> Detect & Parse Conflicts
+                </button>
+                <button type="button" id="btn-clear" class="btn btn-outline">
+                    <span>🗑️</span> Clear
+                </button>
+            </div>
+            <div class="input-tip">
+                <span>💡 Tip:</span> The parser uses a linear-time FSM to extract conflict blocks safely.
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dynamic Status Banner / Toast -->
+<div id="status-banner" class="status-banner hidden">
+    <span id="status-icon" class="status-icon">ℹ️</span>
+    <div id="status-message" class="status-message"></div>
+</div>
+
+<!-- Conflict Resolution Workspace -->
+<section id="workspace-card" class="card workspace-card hidden">
+    <div class="card-header workspace-header">
+        <div class="card-title-group">
+            <span class="step-circle">2</span>
+            <div>
+                <h2>Interactive Side-by-Side Resolution</h2>
+                <p class="card-desc">Compare divergent branch changes side-by-side and choose your resolution strategy.</p>
+            </div>
+        </div>
+        
+        <!-- Global Resolution Controls -->
+        <div class="bulk-controls">
+            <div class="progress-container">
+                <span class="progress-label" id="progress-text">Progress: 0 / 0 Resolved</span>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="bulk-buttons">
+                <button type="button" id="btn-all-ours" class="btn btn-outline btn-sm" title="Apply Ours to all conflicts">
+                    Accept All Ours
+                </button>
+                <button type="button" id="btn-all-theirs" class="btn btn-outline btn-sm" title="Apply Theirs to all conflicts">
+                    Accept All Theirs
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <!-- Conflict cards rendered dynamically -->
+        <div id="conflicts-container" class="conflicts-container"></div>
+    </div>
+</section>
+
+<!-- Live Resolved Code Preview & Export -->
+<section id="preview-card" class="card preview-card hidden">
+    <div class="card-header">
+        <div class="card-title-group">
+            <span class="step-circle">3</span>
+            <div>
+                <h2>Clean Resolved Code Preview</h2>
+                <p class="card-desc">Real-time preview of the reconstructed file with all Git conflict markers cleanly eliminated.</p>
+            </div>
+        </div>
+        <div class="export-actions">
+            <button type="button" id="btn-copy" class="btn btn-secondary btn-sm" title="Copy clean code to clipboard">
+                <span>📋</span> Copy Code
+            </button>
+            <button type="button" id="btn-download" class="btn btn-primary btn-sm" title="Download clean file to disk">
+                <span>💾</span> Download Resolved File
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="preview-meta">
+            <span id="preview-filename-badge" class="badge badge-file">resolved_file.txt</span>
+            <span id="preview-stats" class="preview-stats">0 lines generated</span>
+        </div>
+        <pre id="resolved-code-view" class="code-preview"></pre>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section id="how-it-works" class="card info-card">
+    <div class="card-header">
+        <h2>⚙️ How MergeMate Resolves Git Conflicts</h2>
+    </div>
+    <div class="card-body">
+        <div class="architecture-flow">
+            <div class="flow-step">
+                <div class="step-num">Step 1</div>
+                <h4>FSM Marker Detection</h4>
+                <p>Scans text line-by-line using a 3-state deterministic automaton (<code>NORMAL</code>, <code>OURS</code>, <code>THEIRS</code>) to extract conflict bounds safely.</p>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-step">
+                <div class="step-num">Step 2</div>
+                <h4>Side-by-Side Split View</h4>
+                <p>Renders concurrent edits in parallel columns with branch labels (<code>HEAD</code> vs incoming branch) and visual syntax cues.</p>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-step">
+                <div class="step-num">Step 3</div>
+                <h4>Interactive Selection</h4>
+                <p>Select <em>Ours</em>, <em>Theirs</em>, <em>Both (either order)</em>, or provide in-line <em>Custom Edits</em> for complex refactoring.</p>
+            </div>
+            <div class="flow-arrow">➔</div>
+            <div class="flow-step">
+                <div class="step-num">Step 4</div>
+                <h4>Clean Reconstruction</h4>
+                <p>Reassembles untouched code and resolved chunks without residual <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code> or <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> syntax errors.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Viva Defense Guide Section -->
+<section id="viva" class="card viva-card">
+    <div class="card-header">
+        <h2>🎓 Viva Voce Examination Defense Guide</h2>
+    </div>
+    <div class="card-body viva-content">
+        <div class="viva-grid">
+            <div class="viva-item">
+                <div class="viva-q">Q1: What computational model does MergeMate use?</div>
+                <div class="viva-a">
+                    <strong>Answer:</strong> A deterministic <strong>Finite State Machine (FSM)</strong>. The parser cycles through three states:
+                    <code>STATE_NORMAL</code> (unconflicted code), <code>STATE_OURS</code> (lines following <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt;</code>), and <code>STATE_THEIRS</code> (lines following <code>=======</code>). When <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code> is encountered, the conflict block is packaged and the state resets to <code>STATE_NORMAL</code>.
+                </div>
+            </div>
+
+            <div class="viva-item">
+                <div class="viva-q">Q2: Why is the FSM superior to Regular Expressions for this task?</div>
+                <div class="viva-a">
+                    <strong>Answer:</strong> Regular expressions using greedy dot-matching (e.g. <code>re.DOTALL</code>) can suffer from <strong>catastrophic backtracking ($O(2^N)$)</strong> on large or malformed files with unclosed markers. Our FSM guarantees strict <strong>$O(N)$ linear time</strong> execution and $O(1)$ auxiliary state memory while preserving original operating system line breaks (<code>\r\n</code> vs <code>\n</code>).
+                </div>
+            </div>
+
+            <div class="viva-item">
+                <div class="viva-q">Q3: How does a 3-way merge conflict occur in Git?</div>
+                <div class="viva-a">
+                    <strong>Answer:</strong> Git computes merge results by comparing two divergent branches against their <strong>Common Ancestor ($Base$)</strong>. If Branch A and Branch B both modified the same physical lines relative to the Base commit, Git cannot deduce intent automatically and outputs merge conflict markers for developer resolution.
+                </div>
+            </div>
+
+            <div class="viva-item">
+                <div class="viva-q">Q4: Why decouple the Flask REST API from the Frontend UI?</div>
+                <div class="viva-a">
+                    <strong>Answer:</strong> Decoupling the backend into JSON endpoints (<code>/api/parse</code> and <code>/api/resolve</code>) allows asynchronous client-side state management via JavaScript <code>fetch()</code>. The user gets instant, zero-flicker live code previews without needing disruptive full-page HTTP form reloads.
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
