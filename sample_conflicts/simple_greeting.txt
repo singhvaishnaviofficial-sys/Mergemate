@@ -1,0 +1,9 @@
+Welcome to the Project!
+<<<<<<< HEAD
+print("Welcome to MergeMate - Branch: main")
+version = "1.0.0"
+=======
+print("Welcome to MergeMate - Branch: experimental-ui")
+version = "2.0.0-beta"
+>>>>>>> experimental-ui
+Thank you for using MergeMate.

@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentBlocks = [];
     let currentResolutions = {}; // { conflictId: "ours" | "theirs" | "both_ours_first" | "both_theirs_first" | "custom" }
     let currentFilename = "resolved_file.txt";
+    let currentLineEnding = "\n";
 
     // -------------------------------------------------------------------------
     // DOM Element References
@@ -33,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnClear = document.getElementById("btn-clear");
     const btnSampleSimple = document.getElementById("btn-sample-simple");
     const btnSampleCalc = document.getElementById("btn-sample-calculator");
+    const btnSampleDiff3 = document.getElementById("btn-sample-diff3");
 
     const fileInput = document.getElementById("file-input");
     const fileNameDisplay = document.getElementById("file-name-display");
@@ -97,6 +99,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // -------------------------------------------------------------------------
     btnSampleSimple.addEventListener("click", () => loadSampleConflict("simple"));
     btnSampleCalc.addEventListener("click", () => loadSampleConflict("calculator"));
+    if (btnSampleDiff3) {
+        btnSampleDiff3.addEventListener("click", () => loadSampleConflict("diff3"));
+    }
 
     async function loadSampleConflict(sampleName) {
         try {
@@ -206,6 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             currentBlocks = data.blocks;
             currentResolutions = {};
+            currentLineEnding = data.line_ending || "\n";
 
             if (!data.has_conflicts) {
                 showToast("No Git conflict markers found. This file is clean!", "success");
@@ -252,16 +258,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const oursLinesWithNums = formatCodeWithLineNumbers(block.ours);
             const theirsLinesWithNums = formatCodeWithLineNumbers(block.theirs);
+            const baseLinesWithNums = block.has_base ? formatCodeWithLineNumbers(block.base) : null;
+
+            const splitClass = block.has_base ? "conflict-split-3view" : "conflict-split-view";
+
+            const basePaneHtml = block.has_base ? `
+                <div class="conflict-pane conflict-pane-base">
+                    <div class="pane-label pane-label-base">
+                        <span>Base Ancestor (${escapeHtml(block.base_label)})</span>
+                    </div>
+                    <div class="code-wrapper">
+                        <div class="line-numbers">${baseLinesWithNums.lineNums}</div>
+                        <pre class="conflict-code">${baseLinesWithNums.codeHtml}</pre>
+                    </div>
+                </div>
+            ` : "";
+
+            const baseButtonHtml = block.has_base ? `
+                <button type="button" class="choice-btn" data-cid="${cid}" data-choice="base">Revert to Base (Ancestor)</button>
+            ` : "";
+
+            const headerLabels = block.has_base ? `
+                <strong>Ours:</strong> <code>${escapeHtml(block.ours_label)}</code> &nbsp;|&nbsp; 
+                <strong>Base:</strong> <code>${escapeHtml(block.base_label)}</code> &nbsp;|&nbsp; 
+                <strong>Theirs:</strong> <code>${escapeHtml(block.theirs_label)}</code>
+            ` : `
+                <strong>Ours:</strong> <code>${escapeHtml(block.ours_label)}</code> &nbsp;|&nbsp; 
+                <strong>Theirs:</strong> <code>${escapeHtml(block.theirs_label)}</code>
+            `;
 
             card.innerHTML = `
                 <div class="conflict-item-header">
-                    <span class="conflict-badge">Conflict #${cid}</span>
+                    <span class="conflict-badge">Conflict #${cid}${block.has_base ? ' (diff3)' : ''}</span>
                     <span class="conflict-labels">
-                        <strong>Ours:</strong> <code>${escapeHtml(block.ours_label)}</code> &nbsp;|&nbsp; 
-                        <strong>Theirs:</strong> <code>${escapeHtml(block.theirs_label)}</code>
+                        ${headerLabels}
                     </span>
                 </div>
-                <div class="conflict-split-view">
+                <div class="${splitClass}">
                     <div class="conflict-pane conflict-pane-ours">
                         <div class="pane-label pane-label-ours">
                             <span>Ours (${escapeHtml(block.ours_label)})</span>
@@ -271,6 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             <pre class="conflict-code">${oursLinesWithNums.codeHtml}</pre>
                         </div>
                     </div>
+                    ${basePaneHtml}
                     <div class="conflict-pane conflict-pane-theirs">
                         <div class="pane-label pane-label-theirs">
                             <span>Theirs (${escapeHtml(block.theirs_label)})</span>
@@ -283,6 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <div class="conflict-actions-bar">
                     <button type="button" class="choice-btn active-ours" data-cid="${cid}" data-choice="ours">Accept Ours</button>
+                    ${baseButtonHtml}
                     <button type="button" class="choice-btn" data-cid="${cid}" data-choice="theirs">Accept Theirs</button>
                     <button type="button" class="choice-btn" data-cid="${cid}" data-choice="both_ours_first">Keep Both (Ours First)</button>
                     <button type="button" class="choice-btn" data-cid="${cid}" data-choice="both_theirs_first">Keep Both (Theirs First)</button>
@@ -329,6 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
             b.className = "choice-btn";
             if (b.getAttribute("data-choice") === choice) {
                 if (choice === "ours") b.classList.add("active-ours");
+                else if (choice === "base") b.classList.add("active-base");
                 else if (choice === "theirs") b.classList.add("active-theirs");
                 else if (choice.startsWith("both")) b.classList.add("active-both");
                 else if (choice === "custom") b.classList.add("active-custom");
@@ -392,7 +428,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     blocks: currentBlocks,
-                    resolutions: currentResolutions
+                    resolutions: currentResolutions,
+                    line_ending: currentLineEnding
                 })
             });
 

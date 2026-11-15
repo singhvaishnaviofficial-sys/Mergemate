@@ -9,7 +9,7 @@ Routes:
 """
 
 import os
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify
 from conflict_parser import parse_conflict_text, resolve_conflicts
 
 app = Flask(__name__)
@@ -27,7 +27,7 @@ def index():
 @app.route("/api/parse", methods=["POST"])
 def api_parse():
     """
-    Parses conflict text sent via JSON or form upload.
+    Parses conflict text sent via JSON.
     Expects JSON: { "text": "..." }
     """
     data = request.get_json(silent=True) or {}
@@ -44,6 +44,7 @@ def api_parse():
         "success": True,
         "has_conflicts": parsed["has_conflicts"],
         "conflict_count": parsed["conflict_count"],
+        "line_ending": parsed["line_ending"],
         "blocks": parsed["blocks"]
     })
 
@@ -55,12 +56,14 @@ def api_resolve():
     Expects JSON:
     {
         "blocks": [...],
-        "resolutions": { "1": "ours", "2": "theirs", ... }
+        "resolutions": { "1": "ours", "2": "theirs", ... },
+        "line_ending": "\r\n" or "\n" (optional)
     }
     """
     data = request.get_json(silent=True) or {}
     blocks = data.get("blocks", [])
     resolutions = data.get("resolutions", {})
+    line_ending = data.get("line_ending")
 
     if not blocks:
         return jsonify({
@@ -68,7 +71,7 @@ def api_resolve():
             "error": "No blocks provided for resolution."
         }), 400
 
-    resolved_code = resolve_conflicts(blocks, resolutions)
+    resolved_code = resolve_conflicts(blocks, resolutions, target_ending=line_ending)
     return jsonify({
         "success": True,
         "resolved_code": resolved_code
@@ -79,11 +82,12 @@ def api_resolve():
 def api_sample(sample_name):
     """
     Loads bundled sample conflict files for 1-click user testing.
-    Allowed samples: 'simple' or 'calculator'
+    Allowed samples: 'simple', 'calculator', 'diff3'
     """
     sample_mapping = {
         "simple": "simple_greeting.txt",
-        "calculator": "app_calculator.py"
+        "calculator": "app_calculator.py",
+        "diff3": "sample_diff3.py"
     }
 
     filename = sample_mapping.get(sample_name)

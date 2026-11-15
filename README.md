@@ -2,30 +2,35 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/Framework-Flask%203.1-emerald.svg)](https://flask.palletsprojects.com/)
-[![Tests](https://img.shields.io/badge/Unit%20Tests-11%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Unit%20Tests-16%20Passed-brightgreen.svg)]()
 [![Deployment](https://img.shields.io/badge/Deploy-Render-purple.svg)](https://render.com/)
 
-**MergeMate** is an interactive, developer-focused web application built with **Python and Flask** that parses Git merge conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`), presents a side-by-side branch comparison, and enables one-click visual conflict resolution with real-time preview and export.
+**MergeMate** is an interactive, developer-focused web application built with **Python and Flask** that parses standard Git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) as well as `diff3` conflict markers (`<<<<<<<`, `|||||||`, `=======`, `>>>>>>>`), presents side-by-side branch comparison, and enables one-click visual conflict resolution with real-time preview and export.
 
 ---
 
 ## 📌 Features
 
-1. **Deterministic Conflict Detection**:
+1. **Deterministic Conflict Detection (Standard & diff3)**:
    - Parses Git conflict markers using a high-efficiency **Finite State Machine (FSM)**.
+   - Supports both standard 2-way conflicts and Git `diff3` style conflicts (capturing the common ancestor `|||||||`).
    - Extracts branch labels (e.g., `HEAD` vs `feature-branch`) and separates conflicting blocks from normal code.
-2. **Side-by-Side Visual Comparison**:
+2. **Side-by-Side & 3-Way Visual Comparison**:
    - Compares **Ours** (current branch) and **Theirs** (incoming branch) in a responsive two-column split layout.
-3. **Four Resolution Strategies**:
+   - For `diff3` conflicts, provides a 3-way layout including the **Common Ancestor** in amber/gold.
+3. **Five Resolution Strategies**:
    - **Accept Ours**: Retain your branch's implementation.
    - **Accept Theirs**: Retain the incoming branch's implementation.
+   - **Revert to Base**: Revert to the pre-conflict common ancestor (for `diff3` conflicts).
    - **Keep Both**: Concatenate both branches (`Ours then Theirs` or `Theirs then Ours`).
    - **Custom Edit**: In-place code editor for manual refactoring and edge cases.
-4. **Live Code Preview & Export**:
+4. **Line Ending Fidelity**:
+   - Automatically detects and preserves original Windows (`\r\n`) or Unix (`\n`) line breaks during resolution and file download.
+5. **Live Code Preview & Export**:
    - Bottom preview updates in real time as selections are toggled.
    - One-click **Copy to Clipboard** and **Download Resolved File**.
-5. **Sample Files Included**:
-   - One-click buttons to load realistic sample conflicts (`Greeting` and `Calculator`) for quick demonstration.
+6. **Sample Files Included**:
+   - One-click buttons to load realistic sample conflicts (`Greeting`, `Calculator`, and `Diff3 Transaction`) for quick demonstration.
 
 ---
 
@@ -75,11 +80,12 @@ MergeMate/
 │
 ├── sample_conflicts/
 │   ├── simple_greeting.txt     # Single-conflict demonstration file
-│   └── app_calculator.py       # Multi-conflict Python demonstration file
+│   ├── app_calculator.py       # Multi-conflict Python demonstration file
+│   └── sample_diff3.py         # 3-way diff3 conflict (with Common Ancestor)
 │
 ├── tests/
-│   ├── test_parser.py          # 6 unit tests for FSM parser & resolution
-│   └── test_app.py             # 5 integration tests for Flask web routes
+│   ├── test_parser.py          # 10 unit tests for FSM parser & line endings
+│   └── test_app.py             # 6 integration tests for Flask web routes
 │
 ├── DEVELOPMENT_LOG.md          # Real engineering log recording milestones
 ├── PROJECT_CHARTER.md          # Academic project charter & design decisions
