@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MergeMate - Smart Git Merge Conflict Resolver{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Developer Fonts: Fira Code (monospace) & Inter (UI) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand">
+                <span class="brand-logo">⚡</span>
+                <div class="brand-info">
+                    <span class="brand-title">MergeMate</span>
+                    <span class="academic-tag">Smart Git Conflict Resolver</span>
+                </div>
+            </div>
+            
+            <nav class="nav-links">
+                <a href="#resolver-section" class="nav-link">Resolver</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="#viva" class="nav-link">Viva Defense Guide</a>
+                <button type="button" id="theme-toggle-btn" class="theme-toggle" aria-label="Toggle Dark Mode" title="Toggle Dark/Light Mode">
+                    <span id="theme-icon">🌙</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Block -->
+    <main class="main-container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Project Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <div class="footer-brand">
+                <strong>MergeMate</strong> — Academic Computer Science Project
+            </div>
+            <p class="footer-details">
+                Built with Python 3, Flask, and a deterministic linear-time Finite State Machine (FSM) parser.
+            </p>
+            <div class="footer-badges">
+                <span class="badge badge-tech">Python 3.11</span>
+                <span class="badge badge-tech">Flask 3.1</span>
+                <span class="badge badge-tech">Vanilla JS & CSS3</span>
+                <span class="badge badge-tech">Gunicorn / WSGI Ready</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Frontend Controller Script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
