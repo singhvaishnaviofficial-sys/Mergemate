@@ -24,6 +24,12 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/health")
+def health():
+    """Health check endpoint for Render monitoring and uptime verification."""
+    return jsonify({"status": "ok", "app": "MergeMate"})
+
+
 @app.route("/api/parse", methods=["POST"])
 def api_parse():
     """

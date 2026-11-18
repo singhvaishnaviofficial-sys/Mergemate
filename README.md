@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Framework](https://img.shields.io/badge/Framework-Flask%203.1-emerald.svg)](https://flask.palletsprojects.com/)
-[![Tests](https://img.shields.io/badge/Unit%20Tests-16%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-19%20Passed-brightgreen.svg)]()
 [![Deployment](https://img.shields.io/badge/Deploy-Render-purple.svg)](https://render.com/)
 
 **MergeMate** is an interactive, developer-focused web application built with **Python and Flask** that parses standard Git conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) as well as `diff3` conflict markers (`<<<<<<<`, `|||||||`, `=======`, `>>>>>>>`), presents side-by-side branch comparison, and enables one-click visual conflict resolution with real-time preview and export.
@@ -84,7 +84,8 @@ MergeMate/
 │   └── sample_diff3.py         # 3-way diff3 conflict (with Common Ancestor)
 │
 ├── tests/
-│   ├── test_parser.py          # 10 unit tests for FSM parser & line endings
+│   ├── __init__.py             # Package marker for test discovery
+│   ├── test_parser.py          # 13 unit tests for FSM parser & line endings
 │   └── test_app.py             # 6 integration tests for Flask web routes
 │
 ├── DEVELOPMENT_LOG.md          # Real engineering log recording milestones
@@ -112,7 +113,7 @@ http://127.0.0.1:5000
 ```
 
 ### 3. Run the Automated Tests
-Run all 11 unit and integration tests:
+Run all 19 unit and integration tests:
 
 ```bash
 python -m unittest discover tests
